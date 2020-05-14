@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k8s-webhook-example
+  namespace: k8s-webhook-example
+  labels:
+    app: k8s-webhook-example
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: k8s-webhook-example
+  template:
+    metadata:
+      labels:
+        app: k8s-webhook-example
+    spec:
+      containers:
+        - name: k8s-webhook-example
+          image: slok/k8s-webhook-example:latest
+          imagePullPolicy: Always
+          args:
+            - --tls-cert-file-path=/etc/webhook/certs/cert.pem
+            - --tls-key-file-path=/etc/webhook/certs/key.pem
+            - --webhook-label-marks
+            - kubewebhook=k8s-webhook-example
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          readinessProbe:
+            periodSeconds: 15
+            httpGet:
+              scheme: HTTPS
+              path: /healthz/ready
+              port: http
+          volumeMounts:
+            - name: webhook-certs
+              mountPath: /etc/webhook/certs
+              readOnly: true
+      volumes:
+        - name: webhook-certs
+          secret:
+            secretName: k8s-webhook-example-certs
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: k8s-webhook-example
+  namespace: k8s-webhook-example
+  labels:
+    app: k8s-webhook-example
+spec:
+  ports:
+  - port: 443
+    targetPort: 8080
+  selector:
+    app: k8s-webhook-example
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: k8s-webhook-example
+    prometheus: prometheus
+  name: k8s-webhook-example
+  namespace: k8s-webhook-example
+spec:
+  endpoints:
+  - port: metrics
+  selector:
+    matchLabels:
+      app: bilrost

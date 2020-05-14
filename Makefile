@@ -18,6 +18,7 @@ BUILD_BINARY_CMD := VERSION=${VERSION} ./scripts/build/build.sh
 BUILD_DEV_IMAGE_CMD := IMAGE=${DEV_IMAGE_NAME} DOCKER_FILE_PATH=./docker/dev/Dockerfile VERSION=latest ./scripts/build/build-image.sh
 BUILD_PROD_IMAGE_CMD := IMAGE=${PROD_IMAGE_NAME} DOCKER_FILE_PATH=./docker/prod/Dockerfile VERSION=${VERSION} ./scripts/build/build-image.sh
 PUBLISH_PROD_IMAGE_CMD := IMAGE=${PROD_IMAGE_NAME} VERSION=${VERSION} ./scripts/build/publish-image.sh
+GEN_CERTS_CMD := ./scripts/gen-certs.sh
 
 
 help: ## Show this help
@@ -69,3 +70,7 @@ ci-check:  ## Runs checks in CI environment (without docker).
 .PHONY: ci-integration-test
 ci-integration: ## Runs integraton test in CI environment (without docker).
 	@$(INTEGRATION_TEST_CMD)
+
+.PHONY: gen-deploy-certs
+gen-deploy-certs: ## Generate deploy files webhook certificates.
+	@$(GEN_CERTS_CMD)
