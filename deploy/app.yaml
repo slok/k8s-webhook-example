@@ -6,7 +6,7 @@ metadata:
   labels:
     app: k8s-webhook-example
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: k8s-webhook-example
@@ -28,12 +28,14 @@ spec:
             - name: http
               containerPort: 8080
               protocol: TCP
+            - name: metrics
+              containerPort: 8081
+              protocol: TCP
           readinessProbe:
             periodSeconds: 15
             httpGet:
-              scheme: HTTPS
-              path: /healthz/ready
-              port: http
+              path: /healthz
+              port: metrics
           volumeMounts:
             - name: webhook-certs
               mountPath: /etc/webhook/certs
@@ -52,8 +54,12 @@ metadata:
     app: k8s-webhook-example
 spec:
   ports:
-  - port: 443
+  - name: http
+    port: 443
     targetPort: 8080
+  - name: metrics
+    port: 8081
+    targetPort: 8081
   selector:
     app: k8s-webhook-example
 
@@ -71,4 +77,4 @@ spec:
   - port: metrics
   selector:
     matchLabels:
-      app: bilrost
+      app: k8s-webhook-example
