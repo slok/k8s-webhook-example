@@ -80,9 +80,9 @@ func runApp() error {
 		)
 	}
 
-	// HTTP server.
+	// Metrics HTTP server.
 	{
-		logger := logger.WithKV(log.KV{"addr": cfg.ListenAddr})
+		logger := logger.WithKV(log.KV{"addr": cfg.MetricsListenAddr, "http-server": "metrics"})
 		mux := http.NewServeMux()
 
 		// Metrics.
@@ -96,11 +96,35 @@ func runApp() error {
 		mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
 
 		// Health checks.
-		hcHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {})
-		mux.HandleFunc("/healthz/ready", hcHandler)
-		mux.HandleFunc("/healthz/live", hcHandler)
+		mux.HandleFunc("/healthz", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {}))
 
-		// Webhook.
+		server := http.Server{Addr: cfg.MetricsListenAddr, Handler: mux}
+
+		g.Add(
+			func() error {
+				logger.Infof("http server listening...")
+				return server.ListenAndServe()
+			},
+			func(_ error) {
+				logger.Infof("start draining connections")
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+
+				err := server.Shutdown(ctx)
+				if err != nil {
+					logger.Errorf("error while shutting down the server: %s", err)
+				} else {
+					logger.Infof("server stopped")
+				}
+			},
+		)
+	}
+
+	// Webhook HTTP server.
+	{
+		logger := logger.WithKV(log.KV{"addr": cfg.WebhookListenAddr, "http-server": "webhooks"})
+
+		// Webhook handler.
 		wh, err := webhook.New(webhook.Config{
 			Marker:          marker,
 			MetricsRecorder: metricsRec,
@@ -109,9 +133,11 @@ func runApp() error {
 		if err != nil {
 			return fmt.Errorf("could not create webhooks handler: %w", err)
 		}
-		mux.Handle("/", wh)
 
-		server := http.Server{Addr: cfg.ListenAddr, Handler: mux}
+		mux := http.NewServeMux()
+		mux.Handle("/", wh)
+		server := http.Server{Addr: cfg.WebhookListenAddr, Handler: mux}
+
 		g.Add(
 			func() error {
 				if cfg.TLSCertFilePath == "" || cfg.TLSKeyFilePath == "" {
