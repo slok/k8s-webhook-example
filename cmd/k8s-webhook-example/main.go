@@ -13,7 +13,6 @@ import (
 	"github.com/oklog/run"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
-
 	"github.com/sirupsen/logrus"
 
 	"github.com/slok/k8s-webhook-example/internal/http/webhook"
