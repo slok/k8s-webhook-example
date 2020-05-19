@@ -1,9 +1,9 @@
 apiVersion: admissionregistration.k8s.io/v1beta1
 kind: MutatingWebhookConfiguration
 metadata:
-  name: all-mark-webhook
+  name: k8s-webhook-example-webhook
   labels:
-    app: all-mark-webhook
+    app: k8s-webhook-example-webhook
     kind: mutator
 webhooks:
   - name: all-mark-webhook.slok.dev
@@ -36,9 +36,9 @@ webhooks:
 apiVersion: admissionregistration.k8s.io/v1beta1
 kind: ValidatingWebhookConfiguration
 metadata:
-  name: all-mark-webhook
+  name: k8s-webhook-example-webhook
   labels:
-    app: all-mark-webhook
+    app: k8s-webhook-example-webhook
     kind: validator
 webhooks:
   - name: ingress-validation-webhook.slok.dev
