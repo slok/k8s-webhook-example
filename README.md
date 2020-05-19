@@ -10,8 +10,7 @@ The example tries showing these:
   - Gracefull shutdown.
   - Testing webhooks.
 - Serve multiple webhooks on the same application.
-- Mutating and validating webhooks with different use cases (check Webhooks section)
-- Mutating/validating webhook chains (sequential mutations/validations).
+- Mutating and validating webhooks with different use cases (check Webhooks section).
 
 ## Webhooks
 
@@ -40,6 +39,29 @@ First, shows how to create a chain of validations for a single webhook handler.
 
 Second, it shows how to deal with specific types of resources in different group/versions, for this it uses a dynamic webhook (like `all-mark-webhook.slok.dev`) but this instead, typecasts to the specific types, in this case, the webhook validates all available ingresses, specifically `extensions/v1beta1` and `networking.k8s.io/v1beta1`.
 
+### `service-monitor-safer.slok.dev`
+
+- Webhook type: Mutating.
+- Resources affected: [ServiceMonitors] (`monitoring.coreos.com/v1`) CRD.
+
+This webhook show two things.
+
+- Working with CRDs, in this case mutating them.
+- Working with Static webhooks (specific type).
+
+This webhook takes Prometheus `monitoring.coreos.com/v1/servicemonitors` CRs and sets safe scraping intervals, it checks the interval and in case is missing or is less that the minimum configured it will mutate the CR to set the minimum scrape interval.
+
+This will show us how to deal with CRDs in webhooks, and also how we can make static webhooks to only work safely in a specific resource type.
+
+The static webhooks are specially important on resources that are not known, these are:
+
+- CRDs.
+- Core resources that are on the cluster but not on the webhook libraries, because of Kubernetes different versions (new types and deprecations from version to version).
+
+If we use dynamic webhook on unknown types by our webhook app, we will deal with `runtime.Unstructured`, this is not bad and is safe, it would add complexity to mutate/validate these objects, although for mutating/validating metadata fields (e.g `labels`), is easy and simple.
+
+That said, most webhooks can/should use dynamic type webhooks because are common resources, like `ingress-validation-webhook.slok.dev`, `all-mark-webhook.slok.dev`, that use dynamic webhooks correctly.
 
 [k8s-admission-webhooks]: https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/
 [Kubewebhook]: https://github.com/slok/kubewebhook
+[ServiceMonitors]: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#servicemonitor

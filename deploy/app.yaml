@@ -26,6 +26,7 @@ spec:
             - kubewebhook=k8s-webhook-example
             - --webhook-enable-ingress-single-host
             - --webhook-ingress-host-regex=.*\.valhalla\.slok\.dev
+            - --webhook-sm-min-scrape-interval=15s
           ports:
             - name: http
               containerPort: 8080

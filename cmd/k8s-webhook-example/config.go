@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"time"
 
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -17,6 +18,7 @@ type CmdConfig struct {
 	TLSKeyFilePath          string
 	EnableIngressSingleHost bool
 	IngressHostRegexes      []string
+	MinSMScrapeInterval     time.Duration
 
 	LabelMarks map[string]string
 }
@@ -39,6 +41,7 @@ func NewCmdConfig() (*CmdConfig, error) {
 	app.Flag("webhook-label-marks", "a map of labels the webhook will set to all resources, if no labels, the label marker webhook will be disabled. Can repeat flag").Short('l').StringMapVar(&c.LabelMarks)
 	app.Flag("webhook-enable-ingress-single-host", "enables validation of ingress to have only a single host/rule.").Short('s').BoolVar(&c.EnableIngressSingleHost)
 	app.Flag("webhook-ingress-host-regex", "a list of regexes that will validate ingress hosts matching against this regexes, no host disables validation webhook. Can repeat flag.").Short('h').StringsVar(&c.IngressHostRegexes)
+	app.Flag("webhook-sm-min-scrape-interval", "the minimum screate interval service monitors can have.").DurationVar(&c.MinSMScrapeInterval)
 
 	_, err := app.Parse(os.Args[1:])
 	if err != nil {

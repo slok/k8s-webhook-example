@@ -17,8 +17,9 @@ import (
 
 	"github.com/slok/k8s-webhook-example/internal/http/webhook"
 	"github.com/slok/k8s-webhook-example/internal/log"
-	internalprometheus "github.com/slok/k8s-webhook-example/internal/metrics/prometheus"
+	internalmetricsprometheus "github.com/slok/k8s-webhook-example/internal/metrics/prometheus"
 	"github.com/slok/k8s-webhook-example/internal/mutation/mark"
+	internalmutationprometheus "github.com/slok/k8s-webhook-example/internal/mutation/prometheus"
 	"github.com/slok/k8s-webhook-example/internal/validation/ingress"
 )
 
@@ -45,7 +46,7 @@ func runApp() error {
 	logger := log.NewLogrus(logrusLogEntry).WithKV(log.KV{"version": Version})
 
 	// Dependencies.
-	metricsRec := internalprometheus.NewRecorder(prometheus.DefaultRegisterer)
+	metricsRec := internalmetricsprometheus.NewRecorder(prometheus.DefaultRegisterer)
 
 	var marker mark.Marker
 	if len(cfg.LabelMarks) > 0 {
@@ -75,6 +76,15 @@ func runApp() error {
 	} else {
 		ingressSingleHostValidator = ingress.DummyValidator
 		logger.Warningf("ingress single host validation webhook disabled")
+	}
+
+	var serviceMonitorSafer internalmutationprometheus.ServiceMonitorSafer
+	if cfg.MinSMScrapeInterval != 0 {
+		serviceMonitorSafer = internalmutationprometheus.NewServiceMonitorSafer(cfg.MinSMScrapeInterval)
+		logger.Infof("service monitor safer webhook enabled")
+	} else {
+		serviceMonitorSafer = internalmutationprometheus.DummyServiceMonitorSafer
+		logger.Warningf("service monitor safer webhook disabled")
 	}
 
 	// Prepare run entrypoints.
@@ -151,6 +161,7 @@ func runApp() error {
 			Marker:                     marker,
 			IngressRegexHostValidator:  ingressHostValidator,
 			IngressSingleHostValidator: ingressSingleHostValidator,
+			ServiceMonitorSafer:        serviceMonitorSafer,
 			MetricsRecorder:            metricsRec,
 			Logger:                     logger,
 		})
