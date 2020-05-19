@@ -12,6 +12,27 @@ The example tries showing these:
 - Serve multiple webhooks on the same application.
 - Mutating and validating webhooks with different use cases (check Webhooks section).
 
+## Structure
+
+The application is mainly structured in 3 parts:
+
+- `main`: This is where everything is created, wired, configured and set up, [cmd/k8s-webhook-example](cmd/k8s-webhook-example/main.go).
+- `http`: This is the package that configures the HTTP server, wires the routes and the webhook handlers.  [internal/http/webhook](internal/http/webhook).
+- Application services: These services have the domain logic of the validators and mutators:
+  - [`mutation/mark`](internal/mutation/mark): Logic for `all-mark-webhook.slok.dev` webhook.
+  - [`validation/ingress`](internal/validation/ingress): Logic for `ingress-validation-webhook.slok.dev` webhook.
+  - [`mutation/prometheus`](internal/mutation/prometheus): Logic for `service-monitor-safer.slok.dev` webhook.
+
+Apart from the webhook refering stuff we have other parts like:
+
+- [Decoupled metrics](internal/metrics)
+- [Decoupled logger](internal/log)
+- [Application command line flags](cmd/k8s-webhook-example/config.go)
+
+And finally there is an example of how we could deploy our webhooks on a production server:
+
+- [Deploy](deploy)
+
 ## Webhooks
 
 ### `all-mark-webhook.slok.dev`
@@ -61,6 +82,7 @@ The static webhooks are specially important on resources that are not known, the
 If we use dynamic webhook on unknown types by our webhook app, we will deal with `runtime.Unstructured`, this is not bad and is safe, it would add complexity to mutate/validate these objects, although for mutating/validating metadata fields (e.g `labels`), is easy and simple.
 
 That said, most webhooks can/should use dynamic type webhooks because are common resources, like `ingress-validation-webhook.slok.dev`, `all-mark-webhook.slok.dev`, that use dynamic webhooks correctly.
+
 
 [k8s-admission-webhooks]: https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/
 [Kubewebhook]: https://github.com/slok/kubewebhook
