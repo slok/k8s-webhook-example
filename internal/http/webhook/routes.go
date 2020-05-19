@@ -12,5 +12,11 @@ func (h handler) routes(router *http.ServeMux) error {
 	}
 	router.Handle("/wh/mutating/allmark", allmark)
 
+	ingressVal, err := h.ingressValidation()
+	if err != nil {
+		return err
+	}
+	router.Handle("/wh/validating/ingress", ingressVal)
+
 	return nil
 }

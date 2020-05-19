@@ -4,11 +4,12 @@ import (
 	"context"
 	"testing"
 
-	"github.com/slok/k8s-webhook-example/internal/mark"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/slok/k8s-webhook-example/internal/mutation/mark"
 )
 
 func TestLabelMarkerMark(t *testing.T) {

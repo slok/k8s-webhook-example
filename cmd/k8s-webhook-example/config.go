@@ -8,14 +8,17 @@ import (
 
 // CmdConfig represents the configuration of the command.
 type CmdConfig struct {
-	Debug             bool
-	Development       bool
-	WebhookListenAddr string
-	MetricsListenAddr string
-	MetricsPath       string
-	TLSCertFilePath   string
-	TLSKeyFilePath    string
-	LabelMarks        map[string]string
+	Debug                   bool
+	Development             bool
+	WebhookListenAddr       string
+	MetricsListenAddr       string
+	MetricsPath             string
+	TLSCertFilePath         string
+	TLSKeyFilePath          string
+	EnableIngressSingleHost bool
+	IngressHostRegexes      []string
+
+	LabelMarks map[string]string
 }
 
 // NewCmdConfig returns a new command configuration.
@@ -33,7 +36,9 @@ func NewCmdConfig() (*CmdConfig, error) {
 	app.Flag("metrics-path", "the path where Prometheus metrics will be served.").Default("/metrics").StringVar(&c.MetricsPath)
 	app.Flag("tls-cert-file-path", "the path for the webhook HTTPS server TLS cert file.").StringVar(&c.TLSCertFilePath)
 	app.Flag("tls-key-file-path", "the path for the webhook HTTPS server TLS key file.").StringVar(&c.TLSKeyFilePath)
-	app.Flag("webhook-label-marks", "the marks the webhook will set to all resources, if no marks, the label marker webhook will be disabled .").Short('l').StringMapVar(&c.LabelMarks)
+	app.Flag("webhook-label-marks", "a map of labels the webhook will set to all resources, if no labels, the label marker webhook will be disabled. Can repeat flag").Short('l').StringMapVar(&c.LabelMarks)
+	app.Flag("webhook-enable-ingress-single-host", "enables validation of ingress to have only a single host/rule.").Short('s').BoolVar(&c.EnableIngressSingleHost)
+	app.Flag("webhook-ingress-host-regex", "a list of regexes that will validate ingress hosts matching against this regexes, no host disables validation webhook. Can repeat flag.").Short('h').StringsVar(&c.IngressHostRegexes)
 
 	_, err := app.Parse(os.Args[1:])
 	if err != nil {

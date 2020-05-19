@@ -17,8 +17,9 @@ import (
 
 	"github.com/slok/k8s-webhook-example/internal/http/webhook"
 	"github.com/slok/k8s-webhook-example/internal/log"
-	"github.com/slok/k8s-webhook-example/internal/mark"
 	internalprometheus "github.com/slok/k8s-webhook-example/internal/metrics/prometheus"
+	"github.com/slok/k8s-webhook-example/internal/mutation/mark"
+	"github.com/slok/k8s-webhook-example/internal/validation/ingress"
 )
 
 var (
@@ -53,6 +54,27 @@ func runApp() error {
 	} else {
 		marker = mark.DummyMarker
 		logger.Warningf("label marker webhook disabled")
+	}
+
+	var ingressHostValidator ingress.Validator
+	if len(cfg.IngressHostRegexes) > 0 {
+		ingressHostValidator, err = ingress.NewHostRegexValidator(cfg.IngressHostRegexes)
+		if err != nil {
+			return fmt.Errorf("could not create ingress regex host validator: %w", err)
+		}
+		logger.Infof("ingress host regex validation webhook enabled")
+	} else {
+		ingressHostValidator = ingress.DummyValidator
+		logger.Warningf("ingress host regex validation webhook disabled")
+	}
+
+	var ingressSingleHostValidator ingress.Validator
+	if cfg.EnableIngressSingleHost {
+		ingressSingleHostValidator = ingress.SingleHostValidator
+		logger.Infof("ingress single host validation webhook enabled")
+	} else {
+		ingressSingleHostValidator = ingress.DummyValidator
+		logger.Warningf("ingress single host validation webhook disabled")
 	}
 
 	// Prepare run entrypoints.
@@ -126,9 +148,11 @@ func runApp() error {
 
 		// Webhook handler.
 		wh, err := webhook.New(webhook.Config{
-			Marker:          marker,
-			MetricsRecorder: metricsRec,
-			Logger:          logger,
+			Marker:                     marker,
+			IngressRegexHostValidator:  ingressHostValidator,
+			IngressSingleHostValidator: ingressSingleHostValidator,
+			MetricsRecorder:            metricsRec,
+			Logger:                     logger,
 		})
 		if err != nil {
 			return fmt.Errorf("could not create webhooks handler: %w", err)
