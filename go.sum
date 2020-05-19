@@ -528,8 +528,8 @@ github.com/sirupsen/logrus v1.6.0 h1:UBcNElsrwanuuMsnGSlYmtmgbb23qDR5dG+6X6Oo89I
 github.com/sirupsen/logrus v1.6.0/go.mod h1:7uNnSEd1DgxDLC74fIahvMZmmYsHGZGEOFrfsX/uA88=
 github.com/slok/go-http-metrics v0.6.1 h1:+csUaf8Vj7VoW6JxpRHAQ38zYwI2DJybl+fbyI6jmD4=
 github.com/slok/go-http-metrics v0.6.1/go.mod h1:dhek2VzPQJybM5206wxJlbW4dYbQCMgzJrN43BkR7oU=
-github.com/slok/kubewebhook v0.9.2-0.20200512083742-39c518541235 h1:RInxb78B/0JAUNgcMhoOfiNL49fNV+6ZIHCekqVaWIs=
-github.com/slok/kubewebhook v0.9.2-0.20200512083742-39c518541235/go.mod h1:Id1R2ghIXdhilxSaOUWDyBW0lVkJmJ/NJeu3xmf0yZg=
+github.com/slok/kubewebhook v0.10.0 h1:c4HzYRd01BsmrijmlpdZu9k5Jpqj67+R4X54rljK75I=
+github.com/slok/kubewebhook v0.10.0/go.mod h1:Id1R2ghIXdhilxSaOUWDyBW0lVkJmJ/NJeu3xmf0yZg=
 github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d/go.mod h1:OnSkiWE9lh6wB0YB77sQom3nweQdgAjqCqsofrRNTgc=
 github.com/smartystreets/assertions v1.0.1/go.mod h1:kHHU4qYBaI3q23Pp3VPrmWhuIUrLW/7eUrw0BU5VaoM=
 github.com/smartystreets/goconvey v0.0.0-20190330032615-68dc04aab96a/go.mod h1:syvi0/a8iFYH4r/RixwvyeAJjdLS9QV7WQ/tjFTllLA=
