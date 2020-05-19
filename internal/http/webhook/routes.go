@@ -18,5 +18,11 @@ func (h handler) routes(router *http.ServeMux) error {
 	}
 	router.Handle("/wh/validating/ingress", ingressVal)
 
+	safeServiceMonitor, err := h.safeServiceMonitor()
+	if err != nil {
+		return err
+	}
+	router.Handle("/wh/mutating/safeservicemonitor", safeServiceMonitor)
+
 	return nil
 }

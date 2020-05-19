@@ -6,6 +6,7 @@ import (
 
 	"github.com/slok/k8s-webhook-example/internal/log"
 	"github.com/slok/k8s-webhook-example/internal/mutation/mark"
+	"github.com/slok/k8s-webhook-example/internal/mutation/prometheus"
 	"github.com/slok/k8s-webhook-example/internal/validation/ingress"
 )
 
@@ -15,6 +16,7 @@ type Config struct {
 	Marker                     mark.Marker
 	IngressRegexHostValidator  ingress.Validator
 	IngressSingleHostValidator ingress.Validator
+	ServiceMonitorSafer        prometheus.ServiceMonitorSafer
 	Logger                     log.Logger
 }
 
@@ -29,6 +31,10 @@ func (c *Config) defaults() error {
 
 	if c.IngressSingleHostValidator == nil {
 		return fmt.Errorf("ingress single host validator is required")
+	}
+
+	if c.ServiceMonitorSafer == nil {
+		return fmt.Errorf("service monitor safer is required")
 	}
 
 	if c.MetricsRecorder == nil {
@@ -46,6 +52,7 @@ type handler struct {
 	marker           mark.Marker
 	ingRegexHostVal  ingress.Validator
 	ingSingleHostVal ingress.Validator
+	servMonSafer     prometheus.ServiceMonitorSafer
 	handler          http.Handler
 	metrics          MetricsRecorder
 	logger           log.Logger
@@ -65,6 +72,7 @@ func New(config Config) (http.Handler, error) {
 		marker:           config.Marker,
 		ingRegexHostVal:  config.IngressRegexHostValidator,
 		ingSingleHostVal: config.IngressSingleHostValidator,
+		servMonSafer:     config.ServiceMonitorSafer,
 		metrics:          config.MetricsRecorder,
 		logger:           config.Logger.WithKV(log.KV{"service": "webhook-handler"}),
 	}

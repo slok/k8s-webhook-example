@@ -3,6 +3,7 @@ module github.com/slok/k8s-webhook-example
 go 1.14
 
 require (
+	github.com/coreos/prometheus-operator v0.39.0
 	github.com/oklog/run v1.1.0
 	github.com/prometheus/client_golang v1.6.0
 	github.com/sirupsen/logrus v1.6.0

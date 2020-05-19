@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
 	whhttp "github.com/slok/kubewebhook/pkg/http"
 	mutatingwh "github.com/slok/kubewebhook/pkg/webhook/mutating"
 	validatingwh "github.com/slok/kubewebhook/pkg/webhook/validating"
@@ -86,6 +87,43 @@ func (h handler) ingressValidation() (http.Handler, error) {
 	// Create a chain with both ingress validations and use these to create the webhook.
 	v := validatingwh.NewChain(logger, vSingle, vRegex)
 	wh, err := validatingwh.NewWebhook(validatingwh.WebhookConfig{Name: "ingressValidation"}, v, nil, h.metrics, logger)
+	if err != nil {
+		return nil, fmt.Errorf("could not create webhook: %w", err)
+	}
+
+	whHandler, err := whhttp.HandlerFor(wh)
+	if err != nil {
+		return nil, fmt.Errorf("could not create handler from webhook: %w", err)
+	}
+
+	return whHandler, nil
+}
+
+// safeServiceMonitor sets up the webhook handler to set safety Prometheus service monitor CR settings.
+func (h handler) safeServiceMonitor() (http.Handler, error) {
+	mt := mutatingwh.MutatorFunc(func(ctx context.Context, obj metav1.Object) (bool, error) {
+		sm, ok := obj.(*monitoringv1.ServiceMonitor)
+		if !ok {
+			h.logger.Warningf("received object is not an monitoringv1.ServiceMonitor")
+			return false, nil
+		}
+
+		err := h.servMonSafer.EnsureSafety(ctx, sm)
+		if err != nil {
+			return false, fmt.Errorf("could not set safety settings on service monitor: %w", err)
+		}
+
+		return false, nil
+	})
+
+	logger := h.logger.WithKV(log.KV{"lib": "kubewebhook", "webhook": "safeServiceMonitor"})
+
+	// Create a static webhook, placing the specific object we are going to redeive, this is important
+	// so we receive a CR instead of `runtume.Unstructured` on the mutator.
+	wh, err := mutatingwh.NewWebhook(mutatingwh.WebhookConfig{
+		Name: "safeServiceMonitor",
+		Obj:  &monitoringv1.ServiceMonitor{},
+	}, mt, nil, h.metrics, logger)
 	if err != nil {
 		return nil, fmt.Errorf("could not create webhook: %w", err)
 	}
