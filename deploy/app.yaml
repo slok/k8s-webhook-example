@@ -24,6 +24,8 @@ spec:
             - --tls-key-file-path=/etc/webhook/certs/key.pem
             - --webhook-label-marks
             - kubewebhook=k8s-webhook-example
+            - --webhook-enable-ingress-single-host
+            - --webhook-ingress-host-regex=.*\.valhalla\.slok\.dev
           ports:
             - name: http
               containerPort: 8080
