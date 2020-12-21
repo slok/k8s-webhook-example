@@ -26,7 +26,10 @@ func (h handler) allMark() (http.Handler, error) {
 			return nil, fmt.Errorf("could not mark the resource: %w", err)
 		}
 
-		return &whmutating.MutatorResult{MutatedObject: obj}, nil
+		return &whmutating.MutatorResult{
+			MutatedObject: obj,
+			Warnings:      []string{"Resource marked with custom labels"},
+		}, nil
 	})
 
 	logger := h.logger.WithKV(log.KV{"lib": "kubewebhook", "webhook": "allMark"})
