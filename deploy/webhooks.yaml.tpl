@@ -1,4 +1,4 @@
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1
 kind: MutatingWebhookConfiguration
 metadata:
   name: k8s-webhook-example-webhook
@@ -7,6 +7,8 @@ metadata:
     kind: mutator
 webhooks:
   - name: all-mark-webhook.slok.dev
+    admissionReviewVersions: ["v1"]
+    sideEffects: None
     clientConfig:
       service:
         name: k8s-webhook-example
@@ -20,6 +22,8 @@ webhooks:
         resources: ["deployments", "daemonsets", "cronjobs", "jobs", "statefulsets", "pods"]
 
   - name: service-monitor-safer.slok.dev
+    admissionReviewVersions: ["v1"]
+    sideEffects: None
     clientConfig:
       service:
         name: k8s-webhook-example
@@ -33,7 +37,7 @@ webhooks:
         resources: ["servicemonitors"]
 
 ---
-apiVersion: admissionregistration.k8s.io/v1beta1
+apiVersion: admissionregistration.k8s.io/v1
 kind: ValidatingWebhookConfiguration
 metadata:
   name: k8s-webhook-example-webhook
@@ -42,6 +46,8 @@ metadata:
     kind: validator
 webhooks:
   - name: ingress-validation-webhook.slok.dev
+    admissionReviewVersions: ["v1"]
+    sideEffects: None
     clientConfig:
       service:
         name: k8s-webhook-example
