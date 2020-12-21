@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
 	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -34,10 +35,20 @@ func TestHostRegexValidator(t *testing.T) {
 			},
 		},
 
-		"Having an ingress and not specific regex hosts all ingresses should be valid.": {
+		"Having an ingress (networking/v1beta1) and not specific regex hosts all ingresses should be valid.": {
 			ingress: &networkingv1beta1.Ingress{
 				Spec: networkingv1beta1.IngressSpec{
 					Rules: []networkingv1beta1.IngressRule{
+						{Host: "test1.slok.dev"},
+					},
+				},
+			},
+		},
+
+		"Having an ingress and not specific regex hosts all ingresses should be valid.": {
+			ingress: &networkingv1.Ingress{
+				Spec: networkingv1.IngressSpec{
+					Rules: []networkingv1.IngressRule{
 						{Host: "test1.slok.dev"},
 					},
 				},
@@ -46,9 +57,9 @@ func TestHostRegexValidator(t *testing.T) {
 
 		"Having an ingress and an specific regex hosts that matches, validation should be valid.": {
 			hostRegexes: []string{`^.*\.slok\.dev$`},
-			ingress: &networkingv1beta1.Ingress{
-				Spec: networkingv1beta1.IngressSpec{
-					Rules: []networkingv1beta1.IngressRule{
+			ingress: &networkingv1.Ingress{
+				Spec: networkingv1.IngressSpec{
+					Rules: []networkingv1.IngressRule{
 						{Host: "test1.slok.dev"},
 					},
 				},
@@ -57,9 +68,9 @@ func TestHostRegexValidator(t *testing.T) {
 
 		"Having an ingress and an specific regex hosts that does not match, validation should be invalid.": {
 			hostRegexes: []string{`^.*2\.slok\.dev$`},
-			ingress: &networkingv1beta1.Ingress{
-				Spec: networkingv1beta1.IngressSpec{
-					Rules: []networkingv1beta1.IngressRule{
+			ingress: &networkingv1.Ingress{
+				Spec: networkingv1.IngressSpec{
+					Rules: []networkingv1.IngressRule{
 						{Host: "test1.slok.dev"},
 					},
 				},
@@ -69,9 +80,9 @@ func TestHostRegexValidator(t *testing.T) {
 
 		"Having an ingress with multiple rules and an specific regex hosts that does not match, validation should be invalid.": {
 			hostRegexes: []string{`^.*\.slok\.dev$`},
-			ingress: &networkingv1beta1.Ingress{
-				Spec: networkingv1beta1.IngressSpec{
-					Rules: []networkingv1beta1.IngressRule{
+			ingress: &networkingv1.Ingress{
+				Spec: networkingv1.IngressSpec{
+					Rules: []networkingv1.IngressRule{
 						{Host: "test1.slok.dev"},
 						{Host: "test2.slok.dev"},
 						{Host: "test1.slok.wrong"},
@@ -86,9 +97,9 @@ func TestHostRegexValidator(t *testing.T) {
 				`^.*\.slok\.dev$`,
 				`^.*\.slok\.right$`,
 			},
-			ingress: &networkingv1beta1.Ingress{
-				Spec: networkingv1beta1.IngressSpec{
-					Rules: []networkingv1beta1.IngressRule{
+			ingress: &networkingv1.Ingress{
+				Spec: networkingv1.IngressSpec{
+					Rules: []networkingv1.IngressRule{
 						{Host: "test1.slok.dev"},
 						{Host: "test2.slok.dev"},
 						{Host: "test1.slok.right"},
@@ -102,9 +113,9 @@ func TestHostRegexValidator(t *testing.T) {
 				`^.*\.slok\.dev$`,
 				`^.*\.slok\.right$`,
 			},
-			ingress: &networkingv1beta1.Ingress{
-				Spec: networkingv1beta1.IngressSpec{
-					Rules: []networkingv1beta1.IngressRule{
+			ingress: &networkingv1.Ingress{
+				Spec: networkingv1.IngressSpec{
+					Rules: []networkingv1.IngressRule{
 						{Host: "test1.slok.dev"},
 						{Host: "test2.slok.dev"},
 						{Host: "test1.slok.right"},

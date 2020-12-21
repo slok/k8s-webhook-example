@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
 	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -24,6 +25,8 @@ func (s singleHostValidator) Validate(ctx context.Context, obj metav1.Object) er
 	case *extensionsv1beta1.Ingress:
 		rulesLen = len(ing.Spec.Rules)
 	case *networkingv1beta1.Ingress:
+		rulesLen = len(ing.Spec.Rules)
+	case *networkingv1.Ingress:
 		rulesLen = len(ing.Spec.Rules)
 	default:
 		return ErrNotIngress

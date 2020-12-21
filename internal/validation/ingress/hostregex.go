@@ -6,6 +6,7 @@ import (
 	"regexp"
 
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
 	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -46,6 +47,10 @@ func (h hostRegexValidator) Validate(ctx context.Context, obj metav1.Object) err
 			hosts = append(hosts, r.Host)
 		}
 	case *networkingv1beta1.Ingress:
+		for _, r := range ing.Spec.Rules {
+			hosts = append(hosts, r.Host)
+		}
+	case *networkingv1.Ingress:
 		for _, r := range ing.Spec.Rules {
 			hosts = append(hosts, r.Host)
 		}
