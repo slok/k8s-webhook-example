@@ -6,6 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	extensionsv1beta1 "k8s.io/api/extensions/v1beta1"
+	networkingv1 "k8s.io/api/networking/v1"
 	networkingv1beta1 "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -32,7 +33,7 @@ func TestSingleHostValidator(t *testing.T) {
 			},
 		},
 
-		"Having an ingress with a single rule/host it should be validated as correct.": {
+		"Having an ingress (networking/v1beta1) with a single rule/host it should be validated as correct.": {
 			ingress: &networkingv1beta1.Ingress{
 				Spec: networkingv1beta1.IngressSpec{
 					Rules: []networkingv1beta1.IngressRule{
@@ -42,17 +43,27 @@ func TestSingleHostValidator(t *testing.T) {
 			},
 		},
 
+		"Having an ingress with a single rule/host it should be validated as correct.": {
+			ingress: &networkingv1.Ingress{
+				Spec: networkingv1.IngressSpec{
+					Rules: []networkingv1.IngressRule{
+						{Host: "test1.slok.dev"},
+					},
+				},
+			},
+		},
+
 		"Having an ingress with a no rules/hosts it should be validated as incorrect.": {
-			ingress: &networkingv1beta1.Ingress{
-				Spec: networkingv1beta1.IngressSpec{},
+			ingress: &networkingv1.Ingress{
+				Spec: networkingv1.IngressSpec{},
 			},
 			expErr: true,
 		},
 
 		"Having an ingress with a 2 rules/hosts it should be validated as incorrect.": {
-			ingress: &networkingv1beta1.Ingress{
-				Spec: networkingv1beta1.IngressSpec{
-					Rules: []networkingv1beta1.IngressRule{
+			ingress: &networkingv1.Ingress{
+				Spec: networkingv1.IngressSpec{
+					Rules: []networkingv1.IngressRule{
 						{Host: "test1.slok.dev"},
 						{Host: "test2.slok.dev"},
 					},
