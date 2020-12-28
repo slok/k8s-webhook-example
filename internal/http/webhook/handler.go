@@ -7,33 +7,46 @@ import (
 	"net/http"
 
 	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
-	whhttp "github.com/slok/kubewebhook/v2/pkg/http"
-	whmodel "github.com/slok/kubewebhook/v2/pkg/model"
-	"github.com/slok/kubewebhook/v2/pkg/webhook"
-	whmutating "github.com/slok/kubewebhook/v2/pkg/webhook/mutating"
-	whvalidating "github.com/slok/kubewebhook/v2/pkg/webhook/validating"
+	kwhhttp "github.com/slok/kubewebhook/v2/pkg/http"
+	kwhlog "github.com/slok/kubewebhook/v2/pkg/log"
+	kwhmodel "github.com/slok/kubewebhook/v2/pkg/model"
+	kwhwebhook "github.com/slok/kubewebhook/v2/pkg/webhook"
+	kwhmutating "github.com/slok/kubewebhook/v2/pkg/webhook/mutating"
+	kwhvalidating "github.com/slok/kubewebhook/v2/pkg/webhook/validating"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/slok/k8s-webhook-example/internal/log"
 	"github.com/slok/k8s-webhook-example/internal/validation/ingress"
 )
 
+// kubewebhookLogger is a small proxy to use our logger with Kubewebhook.
+type kubewebhookLogger struct {
+	log.Logger
+}
+
+func (l kubewebhookLogger) WithValues(kv map[string]interface{}) kwhlog.Logger {
+	return kubewebhookLogger{Logger: l.Logger.WithKV(kv)}
+}
+func (l kubewebhookLogger) WithCtx(ctx context.Context) kwhlog.Logger {
+	return l.WithValues(kwhlog.ValuesFromCtx(ctx))
+}
+
 // allmark sets up the webhook handler for marking all kubernetes resources using Kubewebhook library.
 func (h handler) allMark() (http.Handler, error) {
-	mt := whmutating.MutatorFunc(func(ctx context.Context, ar *whmodel.AdmissionReview, obj metav1.Object) (*whmutating.MutatorResult, error) {
+	mt := kwhmutating.MutatorFunc(func(ctx context.Context, ar *kwhmodel.AdmissionReview, obj metav1.Object) (*kwhmutating.MutatorResult, error) {
 		err := h.marker.Mark(ctx, obj)
 		if err != nil {
 			return nil, fmt.Errorf("could not mark the resource: %w", err)
 		}
 
-		return &whmutating.MutatorResult{
+		return &kwhmutating.MutatorResult{
 			MutatedObject: obj,
 			Warnings:      []string{"Resource marked with custom labels"},
 		}, nil
 	})
 
-	logger := h.logger.WithKV(log.KV{"lib": "kubewebhook", "webhook": "allMark"})
-	wh, err := whmutating.NewWebhook(whmutating.WebhookConfig{
+	logger := kubewebhookLogger{Logger: h.logger.WithKV(log.KV{"lib": "kubewebhook", "webhook": "allMark"})}
+	wh, err := kwhmutating.NewWebhook(kwhmutating.WebhookConfig{
 		ID:      "allMark",
 		Logger:  logger,
 		Mutator: mt,
@@ -41,7 +54,10 @@ func (h handler) allMark() (http.Handler, error) {
 	if err != nil {
 		return nil, fmt.Errorf("could not create webhook: %w", err)
 	}
-	whHandler, err := whhttp.HandlerFor(webhook.NewMeasuredWebhook(h.metrics, wh))
+	whHandler, err := kwhhttp.HandlerFor(kwhhttp.HandlerConfig{
+		Webhook: kwhwebhook.NewMeasuredWebhook(h.metrics, wh),
+		Logger:  logger,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("could not create handler from webhook: %w", err)
 	}
@@ -55,46 +71,46 @@ func (h handler) allMark() (http.Handler, error) {
 // with allowed host.
 func (h handler) ingressValidation() (http.Handler, error) {
 	// Single host validator.
-	vSingle := whvalidating.ValidatorFunc(func(ctx context.Context, ar *whmodel.AdmissionReview, obj metav1.Object) (*whvalidating.ValidatorResult, error) {
+	vSingle := kwhvalidating.ValidatorFunc(func(ctx context.Context, ar *kwhmodel.AdmissionReview, obj metav1.Object) (*kwhvalidating.ValidatorResult, error) {
 		err := h.ingSingleHostVal.Validate(ctx, obj)
 		if err != nil {
 			if errors.Is(err, ingress.ErrNotIngress) {
 				h.logger.Warningf("received object is not an ingress")
-				return &whvalidating.ValidatorResult{Valid: true}, nil
+				return &kwhvalidating.ValidatorResult{Valid: true}, nil
 			}
 
-			return &whvalidating.ValidatorResult{
+			return &kwhvalidating.ValidatorResult{
 				Message: fmt.Sprintf("ingress is invalid: %s", err),
 				Valid:   false,
 			}, nil
 		}
 
-		return &whvalidating.ValidatorResult{Valid: true}, nil
+		return &kwhvalidating.ValidatorResult{Valid: true}, nil
 	})
 
 	// Host based on regex validator.
-	vRegex := whvalidating.ValidatorFunc(func(ctx context.Context, ar *whmodel.AdmissionReview, obj metav1.Object) (*whvalidating.ValidatorResult, error) {
+	vRegex := kwhvalidating.ValidatorFunc(func(ctx context.Context, ar *kwhmodel.AdmissionReview, obj metav1.Object) (*kwhvalidating.ValidatorResult, error) {
 		err := h.ingRegexHostVal.Validate(ctx, obj)
 		if err != nil {
 			if errors.Is(err, ingress.ErrNotIngress) {
 				h.logger.Warningf("received object is not an ingress")
-				return &whvalidating.ValidatorResult{Valid: true}, nil
+				return &kwhvalidating.ValidatorResult{Valid: true}, nil
 			}
 
-			return &whvalidating.ValidatorResult{
+			return &kwhvalidating.ValidatorResult{
 				Message: fmt.Sprintf("ingress host is invalid: %s", err),
 				Valid:   false,
 			}, nil
 		}
 
-		return &whvalidating.ValidatorResult{Valid: true}, nil
+		return &kwhvalidating.ValidatorResult{Valid: true}, nil
 	})
 
-	logger := h.logger.WithKV(log.KV{"lib": "kubewebhook", "webhook": "ingressValidation"})
+	logger := kubewebhookLogger{Logger: h.logger.WithKV(log.KV{"lib": "kubewebhook", "webhook": "ingressValidation"})}
 
-	// Create a chain with both ingress validations and use these to create the webhook.
-	v := whvalidating.NewChain(logger, vSingle, vRegex)
-	wh, err := whvalidating.NewWebhook(whvalidating.WebhookConfig{
+	// Create a chain with both ingress validations and use these to create the kwhwebhook.
+	v := kwhvalidating.NewChain(logger, vSingle, vRegex)
+	wh, err := kwhvalidating.NewWebhook(kwhvalidating.WebhookConfig{
 		ID:        "ingressValidation",
 		Validator: v,
 		Logger:    logger,
@@ -103,7 +119,10 @@ func (h handler) ingressValidation() (http.Handler, error) {
 		return nil, fmt.Errorf("could not create webhook: %w", err)
 	}
 
-	whHandler, err := whhttp.HandlerFor(webhook.NewMeasuredWebhook(h.metrics, wh))
+	whHandler, err := kwhhttp.HandlerFor(kwhhttp.HandlerConfig{
+		Webhook: kwhwebhook.NewMeasuredWebhook(h.metrics, wh),
+		Logger:  logger,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("could not create handler from webhook: %w", err)
 	}
@@ -113,11 +132,11 @@ func (h handler) ingressValidation() (http.Handler, error) {
 
 // safeServiceMonitor sets up the webhook handler to set safety Prometheus service monitor CR settings.
 func (h handler) safeServiceMonitor() (http.Handler, error) {
-	mt := whmutating.MutatorFunc(func(ctx context.Context, ar *whmodel.AdmissionReview, obj metav1.Object) (*whmutating.MutatorResult, error) {
+	mt := kwhmutating.MutatorFunc(func(ctx context.Context, ar *kwhmodel.AdmissionReview, obj metav1.Object) (*kwhmutating.MutatorResult, error) {
 		sm, ok := obj.(*monitoringv1.ServiceMonitor)
 		if !ok {
 			h.logger.Warningf("received object is not an monitoringv1.ServiceMonitor")
-			return &whmutating.MutatorResult{}, nil
+			return &kwhmutating.MutatorResult{}, nil
 		}
 
 		err := h.servMonSafer.EnsureSafety(ctx, sm)
@@ -125,14 +144,14 @@ func (h handler) safeServiceMonitor() (http.Handler, error) {
 			return nil, fmt.Errorf("could not set safety settings on service monitor: %w", err)
 		}
 
-		return &whmutating.MutatorResult{MutatedObject: sm}, nil
+		return &kwhmutating.MutatorResult{MutatedObject: sm}, nil
 	})
 
-	logger := h.logger.WithKV(log.KV{"lib": "kubewebhook", "webhook": "safeServiceMonitor"})
+	logger := kubewebhookLogger{Logger: h.logger.WithKV(log.KV{"lib": "kubewebhook", "webhook": "safeServiceMonitor"})}
 
 	// Create a static webhook, placing the specific object we are going to redeive, this is important
 	// so we receive a CR instead of `runtume.Unstructured` on the mutator.
-	wh, err := whmutating.NewWebhook(whmutating.WebhookConfig{
+	wh, err := kwhmutating.NewWebhook(kwhmutating.WebhookConfig{
 		ID:      "safeServiceMonitor",
 		Obj:     &monitoringv1.ServiceMonitor{},
 		Mutator: mt,
@@ -142,7 +161,10 @@ func (h handler) safeServiceMonitor() (http.Handler, error) {
 		return nil, fmt.Errorf("could not create webhook: %w", err)
 	}
 
-	whHandler, err := whhttp.HandlerFor(webhook.NewMeasuredWebhook(h.metrics, wh))
+	whHandler, err := kwhhttp.HandlerFor(kwhhttp.HandlerConfig{
+		Webhook: kwhwebhook.NewMeasuredWebhook(h.metrics, wh),
+		Logger:  logger,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("could not create handler from webhook: %w", err)
 	}
