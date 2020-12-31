@@ -17,7 +17,7 @@ The example tries showing these:
 The application is mainly structured in 3 parts:
 
 - `main`: This is where everything is created, wired, configured and set up, [cmd/k8s-webhook-example](cmd/k8s-webhook-example/main.go).
-- `http`: This is the package that configures the HTTP server, wires the routes and the webhook handlers.  [internal/http/webhook](internal/http/webhook).
+- `http`: This is the package that configures the HTTP server, wires the routes and the webhook handlers. [internal/http/webhook](internal/http/webhook).
 - Application services: These services have the domain logic of the validators and mutators:
   - [`mutation/mark`](internal/mutation/mark): Logic for `all-mark-webhook.slok.dev` webhook.
   - [`validation/ingress`](internal/validation/ingress): Logic for `ingress-validation-webhook.slok.dev` webhook.
@@ -40,7 +40,7 @@ And finally there is an example of how we could deploy our webhooks on a product
 - Webhook type: Mutating.
 - Resources affected: `deployments`, `daemonsets`, `cronjobs`, `jobs`, `statefulsets`, `pods`
 
-This webhooks shows how to add a label to all the specified types in a generic way. 
+This webhooks shows how to add a label to all the specified types in a generic way.
 
 We use dynamic webhooks without the requirement to know what type of objects we are dealing with. This is becase all the types implement `metav1.Object` interface that accesses to the metadata of the object. In this case our domain logic doesn't need to know what type is.
 
@@ -83,7 +83,6 @@ If we use dynamic webhook on unknown types by our webhook app, we will deal with
 
 That said, most webhooks can/should use dynamic type webhooks because are common resources, like `ingress-validation-webhook.slok.dev`, `all-mark-webhook.slok.dev`, that use dynamic webhooks correctly.
 
-
 [k8s-admission-webhooks]: https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/
-[Kubewebhook]: https://github.com/slok/kubewebhook
-[ServiceMonitors]: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#servicemonitor
+[kubewebhook]: https://github.com/slok/kubewebhook
+[servicemonitors]: https://github.com/coreos/prometheus-operator/blob/master/Documentation/api.md#servicemonitor
