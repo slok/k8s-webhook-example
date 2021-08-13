@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	monitoringv1 "github.com/coreos/prometheus-operator/pkg/apis/monitoring/v1"
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	kwhhttp "github.com/slok/kubewebhook/v2/pkg/http"
 	kwhlog "github.com/slok/kubewebhook/v2/pkg/log"
 	kwhmodel "github.com/slok/kubewebhook/v2/pkg/model"

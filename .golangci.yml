@@ -1,0 +1,17 @@
+---
+
+run:
+  skip-dirs:
+    - test/integration/crd
+
+  build-tags:
+    - integration
+
+linters:
+  enable:
+    - misspell
+    - goimports
+    - revive
+    - gofmt
+    - depguard
+    - godot
