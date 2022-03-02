@@ -9,14 +9,14 @@ jobs:
     # Execute the checks inside the contianer instead the VM.
     container: golangci/golangci-lint:v1.41.1-alpine
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - run: ./scripts/check/check.sh
 
   test:
     name: Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/setup-go@v2
         with:
           go-version: 1.16
@@ -37,7 +37,7 @@ jobs:
     name: Release image
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Build image
         run: make build-image
       - name: Docker login
@@ -59,7 +59,7 @@ jobs:
     # Only run in master and when has a tag.
     steps:
       - run: echo "VERSION=${GITHUB_REF#refs/*/}" >> ${GITHUB_ENV} # Sets VERSION env var.
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Build image
         run: make build-image
       - name: Docker login
