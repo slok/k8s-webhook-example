@@ -9,7 +9,7 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/slok/go-http-metrics v0.6.1
 	github.com/slok/kubewebhook/v2 v2.1.1-0.20210813062814-0d6b91199b6d
-	github.com/stretchr/testify v1.7.0
+	github.com/stretchr/testify v1.7.2
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	k8s.io/api v0.22.0
 	k8s.io/apimachinery v0.22.0
